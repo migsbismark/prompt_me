@@ -1,0 +1,27 @@
+{
+  "name": "prompt_me-claude",
+  "dockerComposeFile": [
+    "docker-compose.yml"
+  ],
+  "service": "app",
+  "runServices": [
+    "app",
+    "ollama"
+  ],
+  "workspaceFolder": "/workspaces/git/prompt_me",
+  "forwardPorts": [
+    11434
+  ],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.windows": "pwsh"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}
