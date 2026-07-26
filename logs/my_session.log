@@ -1,0 +1,72 @@
+============================================================
+Prompt Optimizer Session Log
+Created: 2026-07-26 05:28:04
+Hostname: 6af40f18e6ef
+IP Address: 172.18.0.3
+User: root
+Working Directory: /workspaces/git/prompt_me
+Ollama Model: llama3.2:3b
+Frontier Config: /workspaces/git/prompt_me/config/frontier_llm.json
+============================================================
+[2026-07-26 05:28:04] [PROMPT] [user] Summarize this article in three bullet points
+[2026-07-26 05:28:04] [PROMPT] [ollama_clarity] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:28:04] [PROMPT] [ollama] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:28:04] [OUTPUT] [ollama] 
+============================================================
+Prompt Optimizer Session Log
+Created: 2026-07-26 05:41:19
+Hostname: 6af40f18e6ef
+IP Address: 172.18.0.3
+User: root
+Working Directory: /workspaces/git/prompt_me
+Ollama Model: llama3.2:3b
+Frontier Config: /workspaces/git/prompt_me/config/frontier_llm.json
+============================================================
+[2026-07-26 05:41:19] [PROMPT] [user] Summarize this article in three bullet points
+[2026-07-26 05:41:19] [PROMPT] [ollama_clarity] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:41:19] [PROMPT] [ollama] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:41:19] [OUTPUT] [ollama] 
+============================================================
+Prompt Optimizer Session Log
+Created: 2026-07-26 05:41:39
+Hostname: 6af40f18e6ef
+IP Address: 172.18.0.3
+User: root
+Working Directory: /workspaces/git/prompt_me
+Ollama Model: llama3.2:3b
+Frontier Config: /workspaces/git/prompt_me/config/frontier_llm.json
+============================================================
+[2026-07-26 05:41:39] [PROMPT] [user] Summarize this article in three bullet points
+[2026-07-26 05:41:39] [PROMPT] [ollama_clarity] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:41:39] [PROMPT] [ollama] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:41:39] [PROMPT] [ollama] You are a prompt quality assistant.
+Determine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.
+Return only one of these two labels on the first line:
+CLEAR
+NEEDS_ENHANCEMENT
+If you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.
+Prompt:
+Summarize this article in three bullet points
+[2026-07-26 05:41:39] [OUTPUT] [ollama] 
+============================================================
+Prompt Optimizer Session Log
+Created: 2026-07-26 05:44:07
+Hostname: 6af40f18e6ef
+IP Address: 172.18.0.3
+User: root
+Working Directory: /workspaces/git/prompt_me
+Ollama Model: llama3.2:3b
+Frontier Config: /workspaces/git/prompt_me/config/frontier_llm.json
+============================================================
+[2026-07-26 05:44:07] [PROMPT] [user] Summarize this article in three bullet points
+[2026-07-26 05:44:07] [PROMPT] [ollama_clarity] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:44:07] [PROMPT] [ollama] You are a prompt quality assistant.\nDetermine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.\nReturn only one of these two labels on the first line:\nCLEAR\nNEEDS_ENHANCEMENT\nIf you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.\nPrompt:\nSummarize this article in three bullet points
+[2026-07-26 05:44:07] [PROMPT] [ollama] You are a prompt quality assistant.
+Determine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.
+Return only one of these two labels on the first line:
+CLEAR
+NEEDS_ENHANCEMENT
+If you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.
+Prompt:
+Summarize this article in three bullet points
+[2026-07-26 05:44:07] [OUTPUT] [ollama] 

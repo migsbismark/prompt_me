@@ -5,11 +5,30 @@ CONFIG_FILE="${OLLAMA_CONFIG_FILE:-$(cd -- "$(dirname -- "$0")"/.. && pwd)/confi
 MODEL="${OLLAMA_MODEL:-}"
 HOST="${OLLAMA_HOST:-http://ollama:11434}"
 
-load_config() {
-  if [[ -f "$CONFIG_FILE" ]]; then
-    MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
-    HOST=$(jq -r '.host // env.OLLAMA_HOST // "http://ollama:11434"' "$CONFIG_FILE")
+log_entry() {
+  local level="$1"
+  local source="$2"
+  local message="$3"
+  if [[ -n "${PROMPT_LOG_FILE:-}" ]]; then
+    printf '[%s] [%s] [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$level" "$source" "$message" >> "$PROMPT_LOG_FILE"
   fi
+}
+
+sanitize_for_log() {
+  cat
+}
+
+load_config() {
+  local configured_model=""
+  local configured_host=""
+
+  if [[ -f "$CONFIG_FILE" ]]; then
+    configured_model=$(jq -r '.model // empty' "$CONFIG_FILE")
+    configured_host=$(jq -r '.host // empty' "$CONFIG_FILE")
+  fi
+
+  MODEL="${OLLAMA_MODEL:-$configured_model}"
+  HOST="${OLLAMA_HOST:-${configured_host:-http://ollama:11434}}"
 }
 
 call_ollama() {
