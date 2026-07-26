@@ -3,12 +3,12 @@ set -euo pipefail
 
 CONFIG_FILE="${OLLAMA_CONFIG_FILE:-$(cd -- "$(dirname -- "$0")"/.. && pwd)/config/ollama.json}"
 MODEL="${OLLAMA_MODEL:-}"
-HOST="${OLLAMA_HOST:-http://localhost:11434}"
+HOST="${OLLAMA_HOST:-http://ollama:11434}"
 
 load_config() {
   if [[ -f "$CONFIG_FILE" ]]; then
     MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
-    HOST=$(jq -r '.host // env.OLLAMA_HOST // "http://localhost:11434"' "$CONFIG_FILE")
+    HOST=$(jq -r '.host // env.OLLAMA_HOST // "http://ollama:11434"' "$CONFIG_FILE")
   fi
 }
 

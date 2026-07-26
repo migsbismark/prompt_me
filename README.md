@@ -54,11 +54,15 @@ If you want to choose a specific log file name, you can override it:
 
 ### 1. Start Ollama
 
-Make sure your local Ollama server is running, for example:
+If you are using the devcontainer, Ollama is started automatically by the container setup and is available at `http://ollama:11434`.
+
+If you are running outside the devcontainer, start the Ollama container with:
 
 ```bash
-ollama serve
+docker compose up -d ollama
 ```
+
+Do not run `ollama serve` manually inside the app container; the app connects to the service endpoint instead.
 
 ### 2. Set up credentials
 

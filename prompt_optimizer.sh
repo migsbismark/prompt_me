@@ -2,7 +2,8 @@
 set -euo pipefail
 
 MODEL="${OLLAMA_MODEL:-llama3.2:3b}"
-HOST="${OLLAMA_HOST:-http://localhost:11434}"
+DEFAULT_HOST="http://localhost:11434"
+HOST="${OLLAMA_HOST:-$DEFAULT_HOST}"
 OUTPUT_FILE=""
 INITIAL_PROMPT=""
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
@@ -10,6 +11,18 @@ OLLAMA_AGENT="$SCRIPT_DIR/agents/ollama_agent.sh"
 FRONTIER_AGENT="$SCRIPT_DIR/agents/frontier_llm_agent.py"
 CONFIG_FILE="$SCRIPT_DIR/config/frontier_llm.json"
 LOG_FILE="${PROMPT_LOG_FILE:-}"
+
+load_ollama_config() {
+  local config_host
+  if [[ -f "$SCRIPT_DIR/config/ollama.json" ]]; then
+    config_host=$(jq -r '.host // empty' "$SCRIPT_DIR/config/ollama.json")
+    if [[ -z "${OLLAMA_HOST:-}" && -n "$config_host" ]]; then
+      HOST="$config_host"
+    fi
+  fi
+}
+
+load_ollama_config
 
 usage() {
   cat <<'EOF'
