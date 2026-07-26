@@ -23,5 +23,6 @@
       ]
     }
   },
-  "remoteUser": "root"
+  "remoteUser": "root",
+  "postCreateCommand": "claude --version"
 }
