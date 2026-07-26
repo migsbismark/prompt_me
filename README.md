@@ -36,6 +36,22 @@ Supported frontier providers:
 
 ## Run it
 
+### Logging
+
+Each run creates a separate session log file in the logs folder. The filename includes a timestamp, and the file header contains session information such as the creation time, hostname, IP address, current user, working directory, the selected Ollama model, and the frontier config path.
+
+Example:
+
+```bash
+./prompt_optimizer.sh "Summarize this article in three bullet points"
+```
+
+If you want to choose a specific log file name, you can override it:
+
+```bash
+./prompt_optimizer.sh --log-file logs/my_session.log "Summarize this article in three bullet points"
+```
+
 ### 1. Start Ollama
 
 Make sure your local Ollama server is running, for example:

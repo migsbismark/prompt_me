@@ -9,6 +9,8 @@ services:
     command: sleep infinity
     depends_on:
       - ollama
+    environment:
+      OLLAMA_HOST: http://ollama:11434
 
   ollama:
     image: ollama/ollama:latest
