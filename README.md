@@ -13,6 +13,7 @@ This is useful when you want better results from large language models without m
 - Uses a local Ollama model for prompt analysis and prompt improvement
 - Asks clarifying questions one at a time and stops as soon as it has enough information, rather than always asking a fixed batch
 - Adds guardrails against fabricated facts: the rewritten prompt is instructed not to invent details, and the final prompt sent to the frontier model carries explicit accuracy constraints
+- Compresses the final prompt with [Headroom](https://github.com/headroomlabs-ai/headroom) right before it is sent to the frontier model, cutting token usage without touching what is sent to the local Ollama model
 - Supports multiple frontier LLM backends through configuration
 - Reads API credentials from a local .env file
 - Keeps secrets out of version control via .gitignore
@@ -22,6 +23,7 @@ This is useful when you want better results from large language models without m
 - Ollama installed and running locally
 - A model available in Ollama, for example `llama3.2:3b`
 - `curl`, `jq`, and Python 3 installed
+- Python dependencies from [requirements.txt](requirements.txt) (installs [`headroom-ai`](https://github.com/headroomlabs-ai/headroom), used to compress the prompt sent to the frontier model). In the devcontainer this installs automatically every time the app container starts (see [.devcontainer/entrypoint.sh](.devcontainer/entrypoint.sh)); otherwise run `pip install -r requirements.txt` yourself.
 
 ## Configuration
 
@@ -112,3 +114,5 @@ Edit [config/frontier_llm.json](config/frontier_llm.json) and change the provide
 If your prompt is already clear, the application will return it as-is. If it is vague, it will ask up to 5 follow-up questions one at a time -- stopping early as soon as it decides it has enough to work with -- and generate a refined version before sending it to the frontier model.
 
 Before the refined prompt is sent to the frontier model, the tool appends an accuracy-constraints block that tells the model to rely only on the information provided, call out anything missing or ambiguous instead of guessing, and clearly separate assumptions from stated facts. This is meant to reduce hallucinated details flowing from either the local enhancement step or the frontier model's response.
+
+Immediately before that final prompt goes out over the network, [agents/frontier_llm_agent.py](agents/frontier_llm_agent.py) runs it through Headroom's `compress()` to shrink token usage. This only applies to the request sent to the frontier model -- the local Ollama calls (clarity check, clarifying questions, enhancement rewrite) are left untouched.

@@ -7,6 +7,8 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from headroom import compress
+
 
 def load_env_file(path: str) -> None:
     env_path = Path(path)
@@ -144,6 +146,11 @@ def main() -> None:
 
     prompt = sys.argv[1]
     provider = config.get("provider", "openai")
+
+    compressed_messages = compress([{"role": "user", "content": prompt}], model=config.get("model"))
+    prompt = compressed_messages[-1]["content"]
+    append_log(log_file, "frontier_prompt_compressed", prompt)
+
     api_key = os.getenv(config.get("api_key_env", "OPENAI_API_KEY"))
     if not api_key and provider not in {"gemini"}:
         print(f"Missing API key from environment variable {config.get('api_key_env', 'OPENAI_API_KEY')}", file=sys.stderr)

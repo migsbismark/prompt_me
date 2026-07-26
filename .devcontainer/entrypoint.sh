@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+pip install --break-system-packages -r requirements.txt
+
 if command -v ollama >/dev/null 2>&1; then
   echo "Starting Ollama in the background..."
   ollama serve > /tmp/ollama.log 2>&1 &
