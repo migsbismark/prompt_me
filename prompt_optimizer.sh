@@ -172,22 +172,23 @@ log_entry "PROMPT" "user" "$INITIAL_PROMPT"
 clarity_prompt=$(cat <<EOF
 You are a prompt quality assistant.
 Determine whether the following prompt is clear, specific, and actionable enough for a frontier LLM.
-Return only one of these two labels on the first line:
+Return only one of these two labels, and nothing else:
 CLEAR
 NEEDS_ENHANCEMENT
-If you return NEEDS_ENHANCEMENT, add three concise clarifying questions on the next three lines using the format Q1:, Q2:, Q3:.
 Prompt:
 $INITIAL_PROMPT
 EOF
 )
 
 log_entry "PROMPT" "ollama_clarity" "$clarity_prompt"
-clarity_response=$(call_ollama "$clarity_prompt")
+if ! clarity_response=$(call_ollama "$clarity_prompt"); then
+  exit 1
+fi
+log_entry "OUTPUT" "ollama_clarity" "$clarity_response"
 decision=$(printf '%s
 ' "$clarity_response" | head -n 1 | tr -d '\r')
 
 if [[ "$decision" == "CLEAR" ]]; then
-  log_entry "OUTPUT" "ollama_clarity" "$clarity_response"
   echo "The initial prompt is already clear. No enhancement is needed."
   echo "$INITIAL_PROMPT"
   if [[ -n "$OUTPUT_FILE" ]]; then
@@ -196,53 +197,129 @@ if [[ "$decision" == "CLEAR" ]]; then
   exit 0
 fi
 
-mapfile -t questions < <(printf '%s
-' "$clarity_response" | sed -n '2,4p' | sed 's/^[[:space:]]*//')
+MAX_CLARIFYING_QUESTIONS=5
+conversation=""
+question_count=0
 
-if [[ ${#questions[@]} -lt 3 ]]; then
-  echo "The model did not return three questions. Please try again." >&2
-  exit 1
+echo "The prompt is a bit vague. I'll ask a few questions (up to $MAX_CLARIFYING_QUESTIONS) to improve it -- I'll stop early once I have enough."
+
+MAX_MALFORMED_ATTEMPTS=2
+
+while (( question_count < MAX_CLARIFYING_QUESTIONS )); do
+  base_next_question_prompt=$(cat <<EOF
+You are a prompt quality assistant clarifying a vague prompt before it is rewritten for a frontier LLM.
+Original prompt:
+$INITIAL_PROMPT
+
+Clarifications gathered so far (may be empty):
+$conversation
+
+Decide whether you now have enough information to rewrite the original prompt clearly, specifically, and actionably for a frontier LLM.
+- If you have enough information, respond with exactly one line and nothing else:
+DONE
+- If you still need more information, respond with exactly two lines and nothing else:
+CONTINUE
+Q: <one concise clarifying question that would most improve the prompt, not already asked above>
+EOF
+)
+
+  question_text=""
+  is_done=false
+  malformed=false
+
+  for (( attempt=1; attempt<=MAX_MALFORMED_ATTEMPTS; attempt++ )); do
+    next_question_prompt="$base_next_question_prompt"
+    if (( attempt > 1 )); then
+      next_question_prompt+=$'\n\nYour previous reply did not follow the required format. Reply with ONLY the word DONE, or ONLY "CONTINUE" followed by a line starting with "Q:". Do not add any other words or commentary.'
+    fi
+
+    log_entry "PROMPT" "ollama_next_question" "$next_question_prompt"
+    if ! next_response=$(call_ollama "$next_question_prompt"); then
+      exit 1
+    fi
+    log_entry "OUTPUT" "ollama_next_question" "$next_response"
+
+    # A question line is the strongest signal, regardless of what the first line said.
+    # `|| true` prevents set -e/pipefail from killing the script when there is no Q: line to match
+    # (e.g. a correctly formatted DONE reply), which previously aborted the whole run silently.
+    question_text=$(printf '%s\n' "$next_response" | grep -m1 -iE '^[[:space:]]*Q:' | sed -E 's/^[[:space:]]*[Qq]:[[:space:]]*//' || true)
+    if [[ -n "$question_text" ]]; then
+      malformed=false
+      break
+    fi
+
+    first_line=$(printf '%s\n' "$next_response" | head -n 1 | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    if printf '%s' "$first_line" | grep -qiE '^done[.!]?$'; then
+      is_done=true
+      malformed=false
+      break
+    fi
+
+    malformed=true
+  done
+
+  if $is_done; then
+    break
+  fi
+
+  if $malformed; then
+    # The model failed to follow the format twice in a row; stop asking rather than loop forever.
+    echo "The clarifying model gave an unexpected response; continuing with the clarifications gathered so far." >&2
+    break
+  fi
+
+  question_count=$((question_count + 1))
+  printf '%d) %s\n' "$question_count" "$question_text"
+  read -r -p "Answer $question_count: " answer_text
+
+  conversation+="Q${question_count}: ${question_text}"$'\n'"A${question_count}: ${answer_text}"$'\n'
+done
+
+if [[ -z "$conversation" ]]; then
+  conversation="(no clarifications were gathered)"
 fi
-
-echo "The prompt is a bit vague. Please answer these three questions to improve it:"
-printf '1) %s\n' "${questions[0]#Q1: }"
-printf '2) %s\n' "${questions[1]#Q2: }"
-printf '3) %s\n' "${questions[2]#Q3: }"
-
-read -r -p "Answer 1: " answer1
-read -r -p "Answer 2: " answer2
-read -r -p "Answer 3: " answer3
 
 enhancement_prompt=$(cat <<EOF
 You are a prompt optimizer.
 Rewrite the following prompt so it is clearer, more specific, and more actionable for a frontier LLM.
 Preserve the user's original intent and return only the improved prompt.
+Do not invent, assume, or add any fact, name, number, date, or detail that is not explicitly stated in the original prompt or the clarifications below. If a detail is not covered by them, phrase the rewritten prompt so it explicitly asks for that detail or marks it as unspecified, rather than making one up.
 Original prompt:
 $INITIAL_PROMPT
 
 Clarifications:
-1. $answer1
-2. $answer2
-3. $answer3
+$conversation
 EOF
 )
 
 log_entry "PROMPT" "ollama_enhancement" "$enhancement_prompt"
-enhanced_prompt=$(call_ollama "$enhancement_prompt")
+if ! enhanced_prompt=$(call_ollama "$enhancement_prompt"); then
+  exit 1
+fi
 log_entry "OUTPUT" "ollama_enhancement" "$enhanced_prompt"
 
+final_prompt=$(cat <<EOF
+$enhanced_prompt
+
+Accuracy constraints:
+- Only use information explicitly given above; do not fabricate facts, sources, statistics, quotes, or other details.
+- If something required to complete this task is missing or ambiguous, say so explicitly instead of guessing or filling it in.
+- Clearly distinguish any assumption you must make from stated fact.
+EOF
+)
+
 echo "Enhanced prompt:"
-echo "$enhanced_prompt"
+echo "$final_prompt"
 
 if [[ -n "$OUTPUT_FILE" ]]; then
-  printf '%s\n' "$enhanced_prompt" > "$OUTPUT_FILE"
+  printf '%s\n' "$final_prompt" > "$OUTPUT_FILE"
 fi
 
 if [[ -f "$FRONTIER_AGENT" ]]; then
-  log_entry "PROMPT" "frontier" "$enhanced_prompt"
+  log_entry "PROMPT" "frontier" "$final_prompt"
   echo ""
   echo "Sending the optimized prompt to the configured frontier LLM agent..."
-  frontier_response=$(python3 "$FRONTIER_AGENT" "$enhanced_prompt" "$CONFIG_FILE")
+  frontier_response=$(python3 "$FRONTIER_AGENT" "$final_prompt" "$CONFIG_FILE")
   log_entry "OUTPUT" "frontier" "$frontier_response"
   echo "$frontier_response"
 fi

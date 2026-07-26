@@ -1,0 +1,4 @@
+FROM ollama/ollama:latest
+
+COPY .devcontainer/norton-root-ca.crt /usr/local/share/ca-certificates/norton-root-ca.crt
+RUN update-ca-certificates

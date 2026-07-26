@@ -19,10 +19,11 @@
       },
       "extensions": [
         "ms-python.python",
-        "ms-vscode.vscode-typescript-next"
+        "ms-vscode.vscode-typescript-next",
+        "anthropic.claude-code"
       ]
     }
   },
   "remoteUser": "root",
-  "postCreateCommand": "claude --version"
+  "postCreateCommand": "bash .devcontainer/post-create.sh && claude --version"
 }

@@ -4,13 +4,15 @@ This application is a lightweight prompt engineering workflow that uses a local 
 
 ## Main intention
 
-The main goal is to make prompt writing more reliable and more effective. The system first checks whether a prompt is already clear. If it is not, it asks three focused follow-up questions, uses the answers to rewrite the prompt, and then forwards the improved version to a frontier model.
+The main goal is to make prompt writing more reliable and more effective. The system first checks whether a prompt is already clear. If it is not, it asks follow-up questions one at a time (up to 5), stopping as soon as it has enough information, uses the answers to rewrite the prompt, and then forwards the improved version to a frontier model.
 
 This is useful when you want better results from large language models without manually rewriting every prompt from scratch.
 
 ## What it does
 
 - Uses a local Ollama model for prompt analysis and prompt improvement
+- Asks clarifying questions one at a time and stops as soon as it has enough information, rather than always asking a fixed batch
+- Adds guardrails against fabricated facts: the rewritten prompt is instructed not to invent details, and the final prompt sent to the frontier model carries explicit accuracy constraints
 - Supports multiple frontier LLM backends through configuration
 - Reads API credentials from a local .env file
 - Keeps secrets out of version control via .gitignore
@@ -107,4 +109,6 @@ Edit [config/frontier_llm.json](config/frontier_llm.json) and change the provide
 
 ## Example behavior
 
-If your prompt is already clear, the application will return it as-is. If it is vague, it will ask three follow-up questions and generate a refined version before sending it to the frontier model.
+If your prompt is already clear, the application will return it as-is. If it is vague, it will ask up to 5 follow-up questions one at a time -- stopping early as soon as it decides it has enough to work with -- and generate a refined version before sending it to the frontier model.
+
+Before the refined prompt is sent to the frontier model, the tool appends an accuracy-constraints block that tells the model to rely only on the information provided, call out anything missing or ambiguous instead of guessing, and clearly separate assumptions from stated facts. This is meant to reduce hallucinated details flowing from either the local enhancement step or the frontier model's response.
