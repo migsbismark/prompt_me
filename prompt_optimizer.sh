@@ -11,6 +11,9 @@ OLLAMA_AGENT="$SCRIPT_DIR/agents/ollama_agent.sh"
 FRONTIER_AGENT="$SCRIPT_DIR/agents/frontier_llm_agent.py"
 CONFIG_FILE="$SCRIPT_DIR/config/frontier_llm.json"
 LOG_FILE="${PROMPT_LOG_FILE:-}"
+SESSIONS_DIR="$SCRIPT_DIR/sessions"
+SESSION_NAME="default"
+RESET_SESSION=false
 
 load_ollama_config() {
   local config_host
@@ -34,6 +37,9 @@ Options:
   --output FILE      Write the final prompt to a file
   --frontier-config FILE  Path to the frontier LLM config JSON (default: config/frontier_llm.json)
   --log-file FILE    Write timestamped prompt and agent logs to this file
+  --session NAME     Conversation history to append to/continue, stored under
+                      sessions/ (default: "default")
+  --reset-session    Clear the named session's history before starting
   -h, --help         Show this help text
 EOF
 }
@@ -64,6 +70,15 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || { echo "Missing value for --log-file" >&2; exit 1; }
       LOG_FILE="$2"
       shift 2
+      ;;
+    --session)
+      [[ $# -ge 2 ]] || { echo "Missing value for --session" >&2; exit 1; }
+      SESSION_NAME="$2"
+      shift 2
+      ;;
+    --reset-session)
+      RESET_SESSION=true
+      shift
       ;;
     -h|--help)
       usage
@@ -110,6 +125,19 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
   exit 1
 fi
 
+if [[ ! "$SESSION_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  echo "Invalid --session name: $SESSION_NAME (use letters, numbers, '.', '_', '-')" >&2
+  exit 1
+fi
+
+mkdir -p "$SESSIONS_DIR"
+OLLAMA_SESSION_FILE="$SESSIONS_DIR/${SESSION_NAME}_ollama.json"
+FRONTIER_SESSION_FILE="$SESSIONS_DIR/${SESSION_NAME}_frontier.json"
+
+if [[ "$RESET_SESSION" == true ]]; then
+  rm -f "$OLLAMA_SESSION_FILE" "$FRONTIER_SESSION_FILE"
+fi
+
 session_tag=$(date '+%Y%m%d_%H%M%S')
 if [[ -z "$LOG_FILE" ]]; then
   LOG_FILE="$SCRIPT_DIR/logs/prompt_optimizer_${session_tag}.log"
@@ -142,6 +170,7 @@ write_session_header() {
     echo "Working Directory: $PWD"
     echo "Ollama Model: $MODEL"
     echo "Frontier Config: $CONFIG_FILE"
+    echo "Session: $SESSION_NAME (ollama: $OLLAMA_SESSION_FILE, frontier: $FRONTIER_SESSION_FILE)"
     echo "============================================================"
   } >> "$LOG_FILE"
 }
@@ -162,7 +191,7 @@ call_ollama() {
   local prompt="$1"
   log_entry "PROMPT" "ollama" "$prompt"
   local response
-  response=$(OLLAMA_MODEL="$MODEL" OLLAMA_HOST="$HOST" "$OLLAMA_AGENT" "$prompt")
+  response=$(OLLAMA_MODEL="$MODEL" OLLAMA_HOST="$HOST" "$OLLAMA_AGENT" "$prompt" "$OLLAMA_SESSION_FILE")
   log_entry "OUTPUT" "ollama" "$response"
   printf '%s' "$response"
 }
@@ -319,7 +348,7 @@ if [[ -f "$FRONTIER_AGENT" ]]; then
   log_entry "PROMPT" "frontier" "$final_prompt"
   echo ""
   echo "Sending the optimized prompt to the configured frontier LLM agent..."
-  frontier_response=$(python3 "$FRONTIER_AGENT" "$final_prompt" "$CONFIG_FILE")
+  frontier_response=$(python3 "$FRONTIER_AGENT" "$final_prompt" "$CONFIG_FILE" "$FRONTIER_SESSION_FILE")
   log_entry "OUTPUT" "frontier" "$frontier_response"
   echo "$frontier_response"
 fi

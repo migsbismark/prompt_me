@@ -13,7 +13,8 @@ This is useful when you want better results from large language models without m
 - Uses a local Ollama model for prompt analysis and prompt improvement
 - Asks clarifying questions one at a time and stops as soon as it has enough information, rather than always asking a fixed batch
 - Adds guardrails against fabricated facts: the rewritten prompt is instructed not to invent details, and the final prompt sent to the frontier model carries explicit accuracy constraints
-- Compresses the final prompt with [Headroom](https://github.com/headroomlabs-ai/headroom) right before it is sent to the frontier model, cutting token usage without touching what is sent to the local Ollama model
+- Compresses every message history with [Headroom](https://github.com/headroomlabs-ai/headroom) right before it goes out over the network -- to the local Ollama model and to the frontier model alike -- cutting token usage without touching what's stored on disk
+- Keeps a running conversation: every new prompt sent to the local Ollama model or the frontier model is appended to that model's prior message history (stored on disk under `sessions/`) instead of being sent on its own, so each call carries the full back-and-forth so far
 - Supports multiple frontier LLM backends through configuration
 - Reads API credentials from a local .env file
 - Keeps secrets out of version control via .gitignore
@@ -39,6 +40,26 @@ Supported frontier providers:
 - `openai_compatible`
 
 ## Run it
+
+### Conversation history / sessions
+
+Each named session keeps two growing message histories on disk under `sessions/`: one for the local Ollama model (`sessions/<name>_ollama.json`) and one for the frontier model (`sessions/<name>_frontier.json`). Every prompt sent to a model during a run is appended as a new message to that model's history file, and the model's reply is appended right after it -- so the next call (even in a later run) sends the old messages plus the new one, not just the new one on its own.
+
+If you don't pass `--session`, everything uses a session named `default`, so simply re-running the script continues the same conversation:
+
+```bash
+./prompt_optimizer.sh "Summarize this article in three bullet points"
+./prompt_optimizer.sh "Now do the same for the next article"   # continues the "default" session
+```
+
+Use `--session NAME` to keep separate conversations apart, and `--reset-session` to clear a session's history before it starts:
+
+```bash
+./prompt_optimizer.sh --session project-x "Draft a release note for this change"
+./prompt_optimizer.sh --session project-x --reset-session "Start a fresh conversation for project-x"
+```
+
+Headroom compression is applied to the full history -- Ollama-side and frontier-side -- right before each request goes out, so the conversation stays within each model's context budget. The history saved to disk is always the uncompressed version.
 
 ### Logging
 
@@ -115,4 +136,4 @@ If your prompt is already clear, the application will return it as-is. If it is 
 
 Before the refined prompt is sent to the frontier model, the tool appends an accuracy-constraints block that tells the model to rely only on the information provided, call out anything missing or ambiguous instead of guessing, and clearly separate assumptions from stated facts. This is meant to reduce hallucinated details flowing from either the local enhancement step or the frontier model's response.
 
-Immediately before that final prompt goes out over the network, [agents/frontier_llm_agent.py](agents/frontier_llm_agent.py) runs it through Headroom's `compress()` to shrink token usage. This only applies to the request sent to the frontier model -- the local Ollama calls (clarity check, clarifying questions, enhancement rewrite) are left untouched.
+Immediately before any request goes out over the network -- the local Ollama calls (clarity check, clarifying questions, enhancement rewrite) and the final call to the frontier model alike -- [agents/ollama_agent.sh](agents/ollama_agent.sh) and [agents/frontier_llm_agent.py](agents/frontier_llm_agent.py) run the message history through Headroom's `compress()` (shared via [agents/headroom_util.py](agents/headroom_util.py)) to shrink token usage. Compression is wire-only: the session history saved to disk always stays uncompressed.
