@@ -41,6 +41,16 @@ Supported frontier providers:
 
 ## Run it
 
+### Manual testing via a local web UI
+
+For manually exercising the clarifying-question flow without a terminal, there's a small dev-only web UI in [webui/](webui/) (stdlib-only, no extra dependencies) that drives this same script and streams its output to a browser:
+
+```bash
+python3 webui/server.py   # http://127.0.0.1:8765
+```
+
+See [webui/README.md](webui/README.md) for details. This is a testing convenience, not a supported product interface -- the app remains CLI-only per REQUIREMENTS.md.
+
 ### Conversation history / sessions
 
 Each named session keeps two growing message histories on disk under `sessions/`: one for the local Ollama model (`sessions/<name>_ollama.json`) and one for the frontier model (`sessions/<name>_frontier.json`). Every prompt sent to a model during a run is appended as a new message to that model's history file, and the model's reply is appended right after it -- so the next call (even in a later run) sends the old messages plus the new one, not just the new one on its own.

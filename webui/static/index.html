@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prompt Optimizer -- Test UI</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Prompt Optimizer <span class="badge">test UI</span></h1>
+    <p class="subtitle">Local dev tool -- drives <code>prompt_optimizer.sh</code> directly, including real Ollama/frontier LLM calls.</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <form id="run-form">
+        <label>
+          Prompt
+          <textarea id="prompt" rows="3" required placeholder="Summarize this article in three bullet points"></textarea>
+        </label>
+
+        <div class="grid">
+          <label>
+            Model
+            <input id="model" type="text" placeholder="llama3.2:3b" />
+          </label>
+          <label>
+            Host
+            <input id="host" type="text" placeholder="http://localhost:11434" />
+          </label>
+          <label>
+            Session
+            <input id="session" type="text" placeholder="default" />
+          </label>
+          <label>
+            Frontier config
+            <input id="frontier_config" type="text" placeholder="config/frontier_llm.json" />
+          </label>
+          <label>
+            Output file
+            <input id="output" type="text" placeholder="(optional)" />
+          </label>
+          <label class="checkbox">
+            <input id="reset_session" type="checkbox" />
+            Reset session before running
+          </label>
+        </div>
+
+        <button id="start-btn" type="submit">Run</button>
+        <span id="status"></span>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Output</h2>
+      <div id="log" aria-live="polite"></div>
+
+      <form id="answer-form" class="hidden">
+        <label>
+          Answer
+          <input id="answer" type="text" autocomplete="off" />
+        </label>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
